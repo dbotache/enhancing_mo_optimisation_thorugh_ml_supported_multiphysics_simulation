@@ -1,0 +1,3 @@
+method: partial_dependencies
+model_types: ["xgb", "ensemble", "mlp", "cnn"]
+feature_name: None

@@ -1,0 +1,3 @@
+method: feature_relevance
+plot: True
+plot_type : bars

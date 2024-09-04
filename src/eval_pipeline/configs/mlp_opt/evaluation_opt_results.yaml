@@ -1,0 +1,24 @@
+defaults:
+  - hydra: default  # Load default hydra settings
+  - _self_
+
+eval_steps:
+  - _target_: eval_pipeline.main_opt.evaluation.opt_results.OptResultsStep
+    optimized_file_adapter:
+      _target_: eval_pipeline.main_opt.evaluation.commons.PandasFileAdapter
+      file_type: csv
+      data_files:
+        - /home/winfried/3rdparty/parameter_regression/datasets/kite/parameter_designs/gbo_d93h16.csv
+    gt_file_adapters: 
+      - _target_: eval_pipeline.main_opt.evaluation.commons.PandasFileAdapter
+        file_type: h5
+        data_files:
+          - /home/winfried/3rdparty/parameter_regression/datasets/kite/parameter_designs/Dataframes/X_test_DoE7_21v_1000DoE-989D_1Q1V_NurRotor.h5
+          - /home/winfried/3rdparty/parameter_regression/datasets/kite/parameter_designs/Dataframes/y_test_DoE7_21v_1000DoE-989D_1Q1V_NurRotor.h5
+    vis_hooks:
+      - _target_: eval_pipeline.main_opt.evaluation.opt_results.GenerateParetoFront
+        pareto_vars: ["MEK_Aktivteile", "Pv_Antrieb_Fzg_Zykl_1", "Pv_Antrieb_Fzg_Zykl_2"]
+        save_csv: pareto_optimized.csv
+      - _target_: eval_pipeline.main_opt.evaluation.opt_results.GenerateParetoFront
+        pareto_vars: ["MEK_Aktivteile", "Pv_Antrieb_Fzg_Zykl_1"]
+      - _target_: eval_pipeline.main_opt.evaluation.opt_results.GenerateViolinPlots

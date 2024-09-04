@@ -1,0 +1,9 @@
+model_type: cnn
+hyperparameter_tuning: False
+feature_scaler: minmax
+target_scaler: minmax
+device: cuda
+opt_trials: 30
+num_epochs: 500
+batch_size: 32
+metric: MAE

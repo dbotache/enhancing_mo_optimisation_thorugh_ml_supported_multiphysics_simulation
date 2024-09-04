@@ -1,0 +1,17 @@
+defaults:
+  - hydra: default  # Load default hydra settings
+  - _self_
+
+eval_steps:
+  - _target_: kite.main_opt.evaluation.model_vs_file.ModelVsFileStep
+    model_file: /home/winfried/projects/research-project-code/src/kite/models/ensemble/file_DoE_29V_791D
+    data_file: /home/winfried/projects/research-project-code/src/kite/data/gbo_out_filtered.h5
+    model_adapter:
+      _target_: kite.main_opt.evaluation.model_vs_file.EnsembleInference
+    file_adapter: 
+      _target_: kite.main_opt.evaluation.model_vs_file.PandasFileAdapter
+      file_type: h5
+    vis_hooks:
+      - _target_: kite.main_opt.evaluation.model_vs_file.PrintMetricsPlotScores
+        scores: [mape]
+      - _target_: kite.main_opt.evaluation.model_vs_file.GTvsPredPlot

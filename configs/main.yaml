@@ -1,0 +1,26 @@
+defaults:
+  - model: xgb
+  - opt: ea_opt
+  - eval: regression
+  - xai: pdp
+  - _self_
+
+main_path: /mnt/datasets/kite/parameter_designs
+splitfolder: train_80perc_test_20perc
+file_name: cfd_red
+
+random_seed: 42
+
+train_models: False
+find_pareto: False
+regression_evaluation: False
+explain_regression: True
+optimisation_evaluation: False
+validation_results: False
+
+output_dir: ./output
+hydra:
+  job:
+    chdir: True
+  run:
+    dir: ${output_dir}

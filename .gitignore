@@ -1,0 +1,32 @@
+*.idea
+*.ipynb_checkpoints
+*__pycache__
+*stored_models
+
+run/*.log
+run/runs/*
+run/log/*
+run/logs/*
+run/scripts/*
+run/models/*
+run/data/*
+run/output/
+
+#added from Jenser
+run/output
+output
+
+Notebooks/models/
+Notebooks/data/
+Notebooks/logs/
+Notebooks/tmp
+Notebooks/archiv
+Notebooks/model_checkpoints/
+Notebooks/valid
+models/
+data/
+output/
+logs/
+
+# for xAI default models and datasets 
+tmp

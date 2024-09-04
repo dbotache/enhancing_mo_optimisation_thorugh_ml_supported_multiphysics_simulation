@@ -1,0 +1,7 @@
+opt_type: ea
+n_gen: 500
+pop_size: 2000
+save_history: False
+verbose: True
+
+save_path: ${file_name}/${model.model_type}/${now:%Y-%m-%d_%H%M%S} #/mnt/work/kite/data/parameter_designs/sampled_df
