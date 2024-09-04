@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath('..'))
 from data_utils import load_df
 from models.model_utils import ModelLoader, ModelWrapper
 from explainability.feature_importance import get_feature_importance, plot_feature_importance
-from explainability.pdp import pdp
+from explainability.pdp import pdp, plot_dpd
 
 def explain_model(args):
 
@@ -56,9 +56,15 @@ def explain_model(args):
         if ast.literal_eval(args.xai.feature_name) is None:
             feature_name = X_test.columns.values[1]
             print(f'Plotting dependencies considering the Parameter: {feature_name}')
-            feature_range, preds = pdp(X_test, y_test, wrapper, feature_name)
+            feature_range, prediction_list = pdp(X_test, y_test, wrapper, feature_name)
 
         else:
-            feature_range, preds = pdp(X_test, y_test, wrapper, args.xai.feature_name)
             print(f'Plotting dependencies considering the Parameter: {args.xai.feature_name}')
+            feature_range, prediction_list = pdp(X_test, y_test, wrapper, args.xai.feature_name)
 
+        if not os.path.isdir(os.path.join(args.main_path, "xai", args.file_name, args.splitfolder)):
+            os.makedirs(os.path.join(args.main_path, "xai", args.file_name, args.splitfolder))
+
+        save_path = f'{args.main_path}/xai/{args.file_name}/{args.splitfolder}'
+        plot_dpd(feature_range, prediction_list, y_test.columns,
+                 args.xai.model_types, save_path=save_path)

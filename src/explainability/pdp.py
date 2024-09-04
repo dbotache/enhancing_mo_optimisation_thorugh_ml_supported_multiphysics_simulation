@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def pdp(X, y, model_wrapper, feature, model_types=None):
     if model_types == None:
@@ -29,3 +30,17 @@ def pdp(X, y, model_wrapper, feature, model_types=None):
             preds[i].append(prediction_list[i])
 
     return feature_range, preds
+
+def plot_dpd(feature_range, prediction_list, y_columns, model_types, save_path='./temp'):
+
+    plt.figure()
+    for i, col_ in enumerate(y_columns):
+        plt.subplot(1, len(y_columns), i + 1)
+        for j, pred_i in enumerate(prediction_list):
+            plt.plot(feature_range, pd.concat(pred_i).loc[:, [col_]].values, label=model_types[j])
+    plt.legend()
+
+    plt.savefig(f'{save_path}/pdp.svg')
+    plt.savefig(f'{save_path}/pdp.pdf')
+
+    plt.show()
