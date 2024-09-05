@@ -31,3 +31,7 @@ def return_scores(args):
     scores_df.to_csv(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/scores.csv')
 
     return scores_df
+
+
+def save_pareto_front():
+    pass

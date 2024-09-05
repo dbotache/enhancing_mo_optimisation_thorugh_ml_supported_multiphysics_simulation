@@ -7,14 +7,14 @@ defaults:
 
 main_path: /home/dbotache/datasets/kite/parameter_designs #/mnt/datasets/kite/parameter_designs
 splitfolder: train_80perc_test_20perc
-file_name: cfd_red
+file_name: Beispiel_Maschine_KI_Databasis
 
 random_seed: 42
 
 train_models: False
-find_pareto: False
+find_pareto: True
 regression_evaluation: False
-explain_regression: True
+explain_regression: False
 optimisation_evaluation: False
 validation_results: False
 

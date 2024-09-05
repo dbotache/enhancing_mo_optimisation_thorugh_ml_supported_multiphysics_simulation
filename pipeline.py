@@ -32,13 +32,6 @@ def main(args):
         print("Models are not trained, they are already there!")
         print("--" * 40)
 
-    if args.find_pareto:
-        print("Optimize and looking for better design parameter sets")
-        make_opt(args)
-    else:
-        print("dont need to look for better design parameters")
-        print("--" * 40)
-
     if args.regression_evaluation:
         scores_df = return_scores(args)
         print("Regression Evaluation:")
@@ -51,6 +44,13 @@ def main(args):
         explain_model(args)
     else:
         print("Regression xAI-Evaluation not required!")
+
+    if args.find_pareto:
+        print("Optimize and looking for better design parameter sets")
+        make_opt(args)
+    else:
+        print("dont need to look for better design parameters")
+        print("--" * 40)
 
     if args.optimisation_evaluation:
         pass
