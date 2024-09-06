@@ -1,8 +1,10 @@
+import sys, os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial import Delaunay
+from models.model_utils import ModelWrapper
 
 
 def pareto_front_2d(df, x_column, y_column, maximize_y=True):
@@ -264,3 +266,51 @@ def plot_gitter_surface(pareto_front, df, edgecolor="black", alpha=0.5):
 
     # Show the plot
     plt.show()
+
+
+def return_opt_sample_pred_lists(args):
+
+    model_types = args.eval.model_types
+    opt_alg = args.opt.opt_type
+
+    # use ModelWrapper Class
+    wrapper = ModelWrapper(main_path=args.main_path,
+                           file_name=args.file_name,
+                           model_types=model_types,
+                           model_sub_folder=None,
+                           verbose=False)
+
+    abs_output_dir = os.path.normpath(os.getcwd())
+
+    if not os.path.isdir(abs_output_dir):
+        print(f'Path does not exist: {abs_output_dir}')
+        return [], []
+
+    else:
+        load_path = f'{abs_output_dir}/{args.file_name}/{args.splitfolder}/{opt_alg}'
+
+        sample_list = []
+        pred_list = []
+
+        model_types_updated = model_types
+
+        for i, model_type in enumerate(model_types):
+            file_path = os.path.join(load_path, model_type, 'X_samples.h5')
+
+            if not os.path.isfile(file_path):
+                print(f'Solution candidates for {model_type} not available')
+                continue
+
+            loc_sample = pd.read_hdf(f'{file_path}')
+            loc_pred = wrapper.return_predictions(loc_sample)[i]
+
+            sample_list.append({"model_type": model_type,
+                                "optimisation_strategy": opt_alg,
+                                "samples": loc_sample
+                                })
+            pred_list.append({"model_type": model_type,
+                              "optimisation_strategy": opt_alg,
+                              "predictions": loc_pred
+                              })
+
+    return sample_list, pred_list

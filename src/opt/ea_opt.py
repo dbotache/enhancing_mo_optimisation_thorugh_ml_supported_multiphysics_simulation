@@ -47,43 +47,7 @@ def ea_optimization(args, problem_dict):
     #if path does not exist, create it
     if not os.path.exists(args.opt.save_path):
         os.makedirs(args.opt.save_path)
-    X_lastpop.to_hdf(f'{args.opt.save_path}/X_{args.file_name}_ea_samples_{args.model.model_type}.h5', key='features')
-    X_promising.to_hdf(f'{args.opt.save_path}/X_{args.file_name}_promising_ea_samples_{args.model.model_type}.h5', key='features')
+    X_lastpop.to_hdf(f'{args.opt.save_path}/X_samples.h5', key='features')
+    X_promising.to_hdf(f'{args.opt.save_path}/X_promising_samples.h5', key='features')
 
-    print(f"Saved two Dataframes to {args.opt.save_path}")
-
-
-
-#Maybe for later but not 4 today: JD
-#
-##%%
-#
-#plot = Scatter()
-#plot.add(pop.get("F"))
-#plot.show()
-#
-#
-#dm = HighTradeoffPoints()
-#
-#I = dm(pop.get("F")[:,:2])
-#
-#plot = Scatter()
-#plot.add(pop.get("F")[:,:2])
-#plot.add(pop.get("F")[I,:2], color="red", s=100)
-#plot.show()
-## %%
-#dm = HighTradeoffPoints()
-#
-#I = dm(pop.get("F")[:,1:3])
-#
-#plot = Scatter()
-#plot.add(pop.get("F")[:,1:3])
-#plot.add(pop.get("F")[I,1:3], color="red", s=100)
-#plot.show()
-#
-#
-##%%
-#len(pop.get("F")[I])
-## %%
-#
-# %%
+    print(f"Saved two Dataframes to {args.output_dir}/{args.opt.save_path}")

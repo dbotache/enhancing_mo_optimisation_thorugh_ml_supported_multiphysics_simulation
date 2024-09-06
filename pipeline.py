@@ -9,7 +9,7 @@ import hydra
 from omegaconf import OmegaConf
 
 from src.models import model_optimisation, model_train
-from src.evaluation import return_scores
+from src.evaluation import return_scores, save_pareto_front
 from src.opt import make_opt
 from src.explainability import explain_model
 
@@ -53,11 +53,14 @@ def main(args):
         print("--" * 40)
 
     if args.optimisation_evaluation:
-        pass
+        save_pareto_front(args)
+        print("Saving Pareto-Frontiers")
+        # TODO: Performance indicators
     else:
-        print("Optimisation Results and Evaluation not required!")
+        print("Optimisation Results not required!")
 
     if args.validation_results:
+        # TODO: Evaluation of validated results
         pass
     else:
         print("Validation Step with Simulation of Optimal Solution Candidates not required!")

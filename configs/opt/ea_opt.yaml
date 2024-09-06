@@ -1,7 +1,7 @@
 opt_type: ea
-n_gen: 500
+n_gen: 100
 pop_size: 2000
 save_history: False
 verbose: True
 
-save_path: ${file_name}/${model.model_type}/${now:%Y-%m-%d_%H%M%S} #/mnt/work/kite/data/parameter_designs/sampled_df
+save_path: ${file_name}/${splitfolder}/${opt.opt_type}/${model.model_type}/${now:%Y-%m-%d_%H%M%S}

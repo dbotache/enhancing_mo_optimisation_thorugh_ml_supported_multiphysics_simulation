@@ -2,7 +2,6 @@ from pymoo.util.display.column import Column
 from pymoo.util.display.output import Output
 
 def opt_fn_motor_free(dict_out):
-    # c1 = torch.clamp(3.25 - torch.tensor(dict_out["Masse_mag"]), min=0).numpy()
     return [dict_out["M"] * (-1), dict_out["P_loss_total"], dict_out["Masse_mag"]]
 
 class MyOutput_motor(Output):

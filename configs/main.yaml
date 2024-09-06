@@ -1,21 +1,21 @@
 defaults:
   - model: xgb
   - opt: ea_opt
-  - eval: regression
+  - eval: pareto
   - xai: pdp
   - _self_
 
-main_path: /home/dbotache/datasets/kite/parameter_designs #/mnt/datasets/kite/parameter_designs
+main_path: /home/dbotache/datasets/kite/parameter_designs
 splitfolder: train_80perc_test_20perc
 file_name: Beispiel_Maschine_KI_Databasis
 
 random_seed: 42
 
 train_models: False
-find_pareto: True
+find_pareto: False
 regression_evaluation: False
 explain_regression: False
-optimisation_evaluation: False
+optimisation_evaluation: True
 validation_results: False
 
 output_dir: ./output
