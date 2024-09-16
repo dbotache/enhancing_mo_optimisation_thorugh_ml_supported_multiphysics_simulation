@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath('..'))
 from evaluation.model_evaluation import score_table
 from data_utils import load_df
 from models.model_utils import ModelWrapper
+from evaluation.pareto_performance import pareto_performance
 
 
 def return_scores(args):
@@ -33,6 +34,7 @@ def return_scores(args):
     scores_df.to_csv(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/scores.csv')
 
     return scores_df
+
 
 def save_pareto_front(args):
     _, _, _, y_test = load_df(args)
@@ -69,5 +71,21 @@ def save_pareto_front(args):
         plt.savefig(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/pareto_predictions_{model_type}.svg')
         plt.savefig(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/pareto_predictions_{model_type}.pdf')
 
-    
+    return front_list
+
+
+def calculate_pareto_performance(args, front_list):
+    _, _, _, y_test = load_df(args)
+
+    loc_target_x = y_test.columns[0]
+    loc_target_y = y_test.columns[1]
+
+    pareto_metrics = pareto_performance(y_test, loc_target_x,
+                                        loc_target_y, front_list)
+
+    pareto_metrics.to_hdf(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/pareto_performance.h5',
+                          key='pareto_scores')
+
+    print(pareto_metrics)
+
 

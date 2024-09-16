@@ -10,6 +10,7 @@ from omegaconf import OmegaConf
 
 from src.models import model_optimisation, model_train
 from src.evaluation import return_scores, save_pareto_front
+from src.evaluation import calculate_pareto_performance
 from src.opt import make_opt
 from src.explainability import explain_model
 
@@ -53,14 +54,18 @@ def main(args):
         print("--" * 40)
 
     if args.optimisation_evaluation:
-        save_pareto_front(args)
         print("Saving Pareto-Frontiers")
-        # TODO: Performance indicators
+        front_list = save_pareto_front(args)
+        print("Pareto performance based on model predictions: ")
+        print("Given-Index for available models and last index correspond to Database")
+        calculate_pareto_performance(args, front_list)
+
     else:
-        print("Optimisation Results not required!")
+        print("Optimisation evaluation not required!")
 
     if args.validation_results:
         # TODO: Evaluation of validated results
+            # TODO: read simulated points and compare to original surrogate predictions
         pass
     else:
         print("Validation Step with Simulation of Optimal Solution Candidates not required!")
