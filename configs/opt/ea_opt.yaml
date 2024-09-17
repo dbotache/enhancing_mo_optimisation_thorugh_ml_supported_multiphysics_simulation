@@ -1,6 +1,6 @@
 opt_type: ea
-n_gen: 100
-pop_size: 2000
+n_gen: 10
+pop_size: 200
 save_history: False
 verbose: True
 

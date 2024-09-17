@@ -1,7 +1,7 @@
 defaults:
-  - model: xgb
+  - model: ens
   - opt: ea_opt
-  - eval: pareto
+  - eval: validation
   - xai: pdp
   - _self_
 
@@ -15,8 +15,8 @@ train_models: False
 find_pareto: False
 regression_evaluation: False
 explain_regression: False
-optimisation_evaluation: True
-validation_results: False
+optimisation_evaluation: False
+validation_results: True
 
 output_dir: ./output
 hydra:

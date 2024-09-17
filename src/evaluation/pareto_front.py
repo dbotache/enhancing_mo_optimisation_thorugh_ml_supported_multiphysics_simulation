@@ -292,8 +292,6 @@ def return_opt_sample_pred_lists(args):
         sample_list = []
         pred_list = []
 
-        model_types_updated = model_types
-
         for i, model_type in enumerate(model_types):
             file_path = os.path.join(load_path, model_type, 'X_samples.h5')
 

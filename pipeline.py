@@ -7,12 +7,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 import hydra
 from omegaconf import OmegaConf
-
 from src.models import model_optimisation, model_train
 from src.evaluation import return_scores, save_pareto_front
 from src.evaluation import calculate_pareto_performance
+from src.evaluation import validation_step
 from src.opt import make_opt
 from src.explainability import explain_model
+
 
 @hydra.main(version_base=None, config_path="./configs", config_name="main")
 def main(args):
@@ -59,14 +60,12 @@ def main(args):
         print("Pareto performance based on model predictions: ")
         print("Given-Index for available models and last index correspond to Database")
         calculate_pareto_performance(args, front_list)
-
     else:
         print("Optimisation evaluation not required!")
 
     if args.validation_results:
-        # TODO: Evaluation of validated results
-            # TODO: read simulated points and compare to original surrogate predictions
-        pass
+        print("Validation scores: ")
+        validation_step(args)
     else:
         print("Validation Step with Simulation of Optimal Solution Candidates not required!")
         print("--" * 40)

@@ -9,6 +9,7 @@ from evaluation.model_evaluation import score_table
 from data_utils import load_df
 from models.model_utils import ModelWrapper
 from evaluation.pareto_performance import pareto_performance
+from evaluation.validation import get_validation_scores
 
 
 def return_scores(args):
@@ -87,5 +88,16 @@ def calculate_pareto_performance(args, front_list):
                           key='pareto_scores')
 
     print(pareto_metrics)
+
+
+def validation_step(args):
+    scores_table = get_validation_scores(args)
+
+    scores_table.to_hdf(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/validation_scores.h5',
+                          key='validation_scores')
+    scores_table.to_csv(f'{args.main_path}/evaluation/{args.file_name}/{args.splitfolder}/validation_scores.csv')
+
+    print(scores_table)
+
 
 
