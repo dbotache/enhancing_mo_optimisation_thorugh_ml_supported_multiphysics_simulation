@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import datetime
 import ax
 import torch
 import torch.nn as nn
@@ -23,25 +24,25 @@ SEARCH_SPACE = [{'name': 'lr', 'type': 'choice',
                  'values': [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
                  'value_type' : 'float', 'is_ordered' : True},
                 {'name': 'hidden_channel_size', 'type': 'choice',
-                 'values': [25, 50, 100, 150, 200, 250, 300, 350, 400],
+                 'values': [25, 50, 100, 150, 200, 250, 300, 350, 400, 600, 800],
                  'value_type' : 'int', 'is_ordered' : True},
-                {'name': 'n_layers', 'type': 'range', 'bounds': [2, 8], 'value_type' : 'int'},
+                {'name': 'n_layers', 'type': 'range', 'bounds': [2, 12], 'value_type' : 'int'},
                 {'name': 'kernel_size', 'type': 'choice',
-                 'values': [3, 5, 7],
+                 'values': [3, 5, 7, 9, 15],
                  'value_type' : 'int', 'is_ordered' : True},
-                {'name': 'padding', 'type': 'range', 'bounds': [1, 2], 'value_type' : 'int'},
+                {'name': 'padding', 'type': 'range', 'bounds': [1, 8], 'value_type' : 'int'},
                 {'name': 'activation', 'type': 'choice', 'values': ['relu', 'elu'], 'value_type': 'str'}]
 
-MODEL_PARAMETERS = {"lr": 0.001,
-                    "dropout_prob": 0.01,
-                    "weight_decay": 0.05,
-                    "hidden_channel_size": 100,
-                    "n_layers": 2,
-                    "kernel_size": 5,
+MODEL_PARAMETERS = {"lr": 1e-05,
+                    "dropout_prob": 0.4,
+                    "weight_decay": 0.7,
+                    "hidden_channel_size": 500,
+                    "n_layers": 4,
+                    "kernel_size": 3,
                     "padding": 2,
                     "activation": "elu",
-                    "feature_scaler": "minmax",
-                    "target_scaler": "minmax"}
+                    "feature_scaler": "standard",
+                    "target_scaler": "standard"}
 
 
 def CrossValTrain(parameters, num_epochs, batch_size, X_train, y_train, device, n_splits=5, metric='MSE'):
@@ -165,8 +166,10 @@ def optimize_cnn(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5, 
     num_epochs = args.model.num_epochs
     batch_size = args.model.batch_size
 
-    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name)):
-        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name))
+    sub_folder = args['date']
+
+    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)):
+        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder))
 
     # Define the objective function to be minimized
     def objective(parameters):
@@ -187,7 +190,7 @@ def optimize_cnn(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5, 
     print("Best hyperparameters: \n", best_parameters)
 
     with open(os.path.join(args.main_path, "models", args.model.model_type,
-                           args.file_name, 'model_parameters.json'), 'w') as f:
+                           args.file_name, sub_folder, 'model_parameters.json'), 'w') as f:
         json.dump(best_parameters, f)
 
     if metric == 'MSE':
@@ -198,8 +201,8 @@ def optimize_cnn(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5, 
     model, history = train_model(best_parameters, num_epochs, batch_size, X_train, y_train,
                 X_test, y_test, criterion, device, n_cpu=n_cpu)
 
-    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/model.pt')
-    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/loss_values.h5', key='loss')
+    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/model.pt')
+    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/loss_values.h5', key='loss')
 
 
 def train_cnn(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='MSE'):
@@ -207,8 +210,10 @@ def train_cnn(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='M
     num_epochs = args.model.num_epochs
     batch_size = args.model.batch_size
 
-    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name)):
-        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name))
+    sub_folder = args['date']
+
+    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)):
+        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder))
 
     MODEL_PARAMETERS['feature_scaler'] = args.model.feature_scaler
     MODEL_PARAMETERS['target_scaler'] = args.model.target_scaler
@@ -227,5 +232,6 @@ def train_cnn(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='M
     model, history = train_model(MODEL_PARAMETERS, num_epochs, batch_size, X_train, y_train,
                 X_test, y_test, criterion, device, n_cpu=n_cpu, verbose=True)
 
-    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/model.pt')
-    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/loss_values.h5', key='loss')
+    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/model.pt')
+    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/loss_values.h5',
+                   key='loss')

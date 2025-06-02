@@ -5,6 +5,7 @@ import os
 
 
 def train_ensembles(args, X_train, y_train, n_cpu=1, metric='MSE'):
+    sub_folder = args['date']
 
     metric_object = None
 
@@ -13,8 +14,8 @@ def train_ensembles(args, X_train, y_train, n_cpu=1, metric='MSE'):
     elif metric == 'MAE':
         metric_object = autosklearn.metrics.mean_absolute_error
 
-    if not os.path.isdir(os.path.join(args.main_path,"models", args.model.model_type, args.file_name)):
-        os.makedirs(os.path.join(args.main_path,"models", args.model.model_type, args.file_name))
+    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)):
+        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder))
 
     for target_name in y_train.columns.values:
 
@@ -23,7 +24,7 @@ def train_ensembles(args, X_train, y_train, n_cpu=1, metric='MSE'):
 
         loc_y_train = y_train.loc[:, [target_name]]
 
-        if os.path.isdir(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{target_name}'):
+        if os.path.isdir(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}'):
             print(f'Model for target {target_name} already exist')
 
         else:
@@ -33,12 +34,12 @@ def train_ensembles(args, X_train, y_train, n_cpu=1, metric='MSE'):
                 memory_limit=16800,
                 per_run_time_limit=60,
                 delete_tmp_folder_after_terminate=False,
-                tmp_folder=f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{target_name}',
+                tmp_folder=f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}',
                 n_jobs=n_cpu,
                 metric=metric_object
             )
             automl.fit(X_train, loc_y_train, dataset_name=target_name)
 
             # save model
-            with open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{target_name}/ensemble.pkl', "wb") as f:
+            with open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}/ensemble.pkl', "wb") as f:
                 pickle.dump(automl, f)

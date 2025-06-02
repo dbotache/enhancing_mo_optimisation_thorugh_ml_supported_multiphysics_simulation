@@ -1,9 +1,9 @@
-model_type: cnn
+model_type: kan
 hyperparameter_tuning: True
 feature_scaler: None
 target_scaler: None
 device: cuda
-opt_trials: 10
+opt_trials: 20
 num_epochs: 500
-batch_size: 64
-metric: MSE
+batch_size: 512
+metric: MaskedLoss

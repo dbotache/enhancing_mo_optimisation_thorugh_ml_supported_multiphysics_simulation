@@ -11,6 +11,7 @@ import xgboost as xgb
 import numpy as np
 from sklearn.metrics import mean_squared_error as MSE
 from sklearn.metrics import mean_absolute_error as MAE
+from joblib import Parallel, delayed
 
 
 xgb_parameters = [{'name': 'n_estimators', 'type': 'choice', 'is_ordered' : True,
@@ -157,6 +158,9 @@ class XGBBayesOptimizer:
         
 
 def optimize_xgb(args, device, X_train, y_train, n_cpu=1, trials=10, metric='MSE'):
+
+    sub_folder = args['date']
+
     gpu_id = None
     tree_method = 'auto'
     objective = None
@@ -173,8 +177,8 @@ def optimize_xgb(args, device, X_train, y_train, n_cpu=1, trials=10, metric='MSE
         gpu_id = 0
         tree_method = 'gpu_hist'
 
-    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name)):
-        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name))
+    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)):
+        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder))
 
     param_list = []
     targets_list = []
@@ -198,7 +202,7 @@ def optimize_xgb(args, device, X_train, y_train, n_cpu=1, trials=10, metric='MSE
         best_parameters['feature_scaler'] = args.model.feature_scaler
         best_parameters['target_scaler'] = args.model.target_scaler
 
-        with open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{target_name}_parameters.json', "w") as f:
+        with open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}_parameters.json', "w") as f:
             json.dump(best_parameters, f)
 
     print('XGB Optimization finished.')
@@ -218,10 +222,13 @@ def optimize_xgb(args, device, X_train, y_train, n_cpu=1, trials=10, metric='MSE
     # Save
     for i, reg_ in enumerate(regressors):
         pickle.dump(reg_,
-                    open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{targets_list[i]}.pkl', "wb"))
+                    open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{targets_list[i]}.pkl', "wb"))
 
 
 def train_xgb(args, device, X_train, y_train, n_cpu=1, metric='MSE'):
+
+    sub_folder = args['date']
+
     gpu_id = None
     tree_method = 'auto'
     objective = None
@@ -248,7 +255,7 @@ def train_xgb(args, device, X_train, y_train, n_cpu=1, metric='MSE'):
 
         target_name = y_train.columns.values[i]
 
-        config_file_path = f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{target_name}_parameters.json'
+        config_file_path = f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}_parameters.json'
 
         if os.path.isfile(config_file_path):
             with open(config_file_path, "r") as f:
@@ -270,5 +277,62 @@ def train_xgb(args, device, X_train, y_train, n_cpu=1, metric='MSE'):
         reg_.fit(X_train.values, y_train.values[:, i])
 
         pickle.dump(reg_,
-                    open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{target_name}.pkl',
+                    open(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}.pkl',
                          "wb"))
+
+
+def parallel_optimize_and_train(args, X_train, y_train, n_cpu=1, trials=10, metric='MSE'):
+    """
+    Runs the optimization and training loops in parallel.
+    """
+    sub_folder = args['date']
+
+    # Ensure output directories exist
+    model_dir = os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)
+    os.makedirs(model_dir, exist_ok=True)
+
+    def optimize_target(i):
+        """Function to optimize a single target variable."""
+        target_name = y_train.columns.values[i]
+        print(f'Optimizing XGB for target {target_name}')
+        optimizer = XGBBayesOptimizer(
+            X_train=X_train.values,
+            y_train=y_train.iloc[:, i].values,
+            model_parameters=xgb_parameters,
+            total_trials=trials,
+            minimize=True,
+            objective_name=metric
+        )
+        best_parameters, _ = optimizer.run_bayes_search(n_jobs=n_cpu, gpu_id=None, print_param_iter=False)
+        best_parameters['feature_scaler'] = args.model.feature_scaler
+        best_parameters['target_scaler'] = args.model.target_scaler
+
+        # Save parameters
+        with open(os.path.join(model_dir, f'{target_name}_parameters.json'), "w") as f:
+            json.dump(best_parameters, f)
+        return best_parameters
+
+    def train_target(i, best_parameters):
+        """Function to train a single target variable."""
+        target_name = y_train.columns.values[i]
+        print(f'Training XGB for target {target_name}')
+        reg = xgb.XGBRegressor(
+            **best_parameters,
+            n_jobs=n_cpu,
+            tree_method='auto',
+            gpu_id=None,
+            objective='reg:squarederror' if metric == 'MSE' else 'reg:absoluteerror',
+            eval_metric=MSE if metric == 'MSE' else MAE
+        )
+        reg.fit(X_train.values, y_train.values[:, i])
+
+        # Save trained model
+        pickle.dump(reg, open(os.path.join(model_dir, f'{target_name}.pkl'), "wb"))
+
+    # Parallel optimization
+    best_params_list = Parallel(n_jobs=n_cpu)(delayed(optimize_target)(i) for i in range(y_train.shape[1]))
+
+    # Parallel training using optimized parameters
+    Parallel(n_jobs=n_cpu)(delayed(train_target)(i, best_params_list[i]) for i in range(y_train.shape[1]))
+
+    print('Optimization and training completed.')

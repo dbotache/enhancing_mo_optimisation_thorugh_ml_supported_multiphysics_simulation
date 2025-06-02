@@ -1,9 +1,9 @@
 model_type: mlp
-hyperparameter_tuning: False
-feature_scaler: minmax
-target_scaler: minmax
+hyperparameter_tuning: True
+feature_scaler: None
+target_scaler: None
 device: cuda
-opt_trials: 30
+opt_trials: 10
 num_epochs: 500
-batch_size: 32
+batch_size: 64
 metric: MAE

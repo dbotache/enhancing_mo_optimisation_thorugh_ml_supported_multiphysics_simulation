@@ -5,9 +5,10 @@ warnings.filterwarnings('ignore')
 
 from data_utils import load_df
 from data_utils.scaling import FeatureTargetScaling
-from models.xgb_optimisation import optimize_xgb, train_xgb
+from models.xgb_optimisation import optimize_xgb, train_xgb, parallel_optimize_and_train
 from models.mlp_optimisation import optimize_mlp, train_mlp
 from models.cnn_optimisation import optimize_cnn, train_cnn
+from models.kan_optimisation import optimize_kan, train_kan
 from models.ensemble import train_ensembles
 from ressources import n_cpu, device
 
@@ -24,7 +25,9 @@ def model_optimisation(args):
     X_test, y_test = x_y_scaling.scale_data(X_test, y_test)
 
     if args.model.model_type == 'xgb':
-        optimize_xgb(args, device, X_train, y_train,
+        #optimize_xgb(args, device, X_train, y_train,
+        #             n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
+        parallel_optimize_and_train(args, X_train, y_train,
                      n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
     if args.model.model_type == 'ensemble': # Hyperparameter tuning is done automatically
         train_ensembles(args, X_train, y_train,
@@ -34,6 +37,9 @@ def model_optimisation(args):
                      n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
     if args.model.model_type == 'cnn':
         optimize_cnn(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5,
+                     n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
+    if args.model.model_type == 'kan':
+        optimize_kan(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5,
                      n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
 
 def model_train(args):
@@ -58,6 +64,9 @@ def model_train(args):
                   n_cpu=n_cpu, metric=args.model.metric)
     if args.model.model_type == 'cnn':
         train_cnn(args, X_train, y_train, X_test, y_test, device,
+                  n_cpu=n_cpu, metric=args.model.metric)
+    if args.model.model_type == 'kan':
+        train_kan(args, X_train, y_train, X_test, y_test, device,
                   n_cpu=n_cpu, metric=args.model.metric)
 
 

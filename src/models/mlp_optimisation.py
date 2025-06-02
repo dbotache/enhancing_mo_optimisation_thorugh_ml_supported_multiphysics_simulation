@@ -2,6 +2,7 @@ import numpy as np
 import ax
 import os
 import json
+import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -23,19 +24,19 @@ SEARCH_SPACE = [{'name': 'lr', 'type': 'choice',
                  'values': [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
                  'value_type' : 'float', 'is_ordered' : True},
                 {'name': 'hidden_size', 'type': 'choice',
-                 'values': [25, 50, 100, 200, 400, 800, 1500, 2000],
+                 'values': [25, 50, 100, 200, 400, 800, 1500, 2000, 3000, 3500],
                  'value_type' : 'int', 'is_ordered' : True},
                 {'name': 'n_layers', 'type': 'range',
-                 'bounds': [2, 8], 'value_type' : 'int'},
+                 'bounds': [2, 16], 'value_type' : 'int'},
                 {'name': 'activation', 'type': 'choice',
                  'values': ['relu', 'elu', 'tanh'], 'value_type' : 'str'}]
 
-MODEL_PARAMETERS = {"lr": 0.001,
-                    "dropout_prob": 0.05,
-                    "weight_decay": 0.4,
-                    "hidden_size": 400,
+MODEL_PARAMETERS = {"lr": 1e-07,
+                    "dropout_prob": 0.2,
+                    "weight_decay": 0.2,
+                    "hidden_size": 2000,
                     "n_layers": 6,
-                    "activation": "relu",
+                    "activation": "elu",
                     "feature_scaler": "minmax",
                     "target_scaler": "minmax"
                     }
@@ -157,8 +158,10 @@ def optimize_mlp(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5, 
     num_epochs = args.model.num_epochs
     batch_size = args.model.batch_size
 
-    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name)):
-        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name))
+    sub_folder = args['date']
+
+    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)):
+        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder))
 
     # Define the objective function to be minimized
     def objective(parameters):
@@ -179,7 +182,7 @@ def optimize_mlp(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5, 
     print("Best hyperparameters: \n", best_parameters)
 
     with open(os.path.join(args.main_path,"models", args.model.model_type,
-                           args.file_name, 'model_parameters.json'), 'w') as f:
+                           args.file_name, sub_folder, 'model_parameters.json'), 'w') as f:
         json.dump(best_parameters, f)
 
     if metric == 'MSE':
@@ -190,8 +193,9 @@ def optimize_mlp(args, X_train, y_train, X_test, y_test, device, cv_n_splits=5, 
     model, history = train_model(best_parameters, num_epochs, batch_size, X_train, y_train,
                 X_test, y_test, criterion, device, n_cpu=n_cpu)
 
-    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/model.pt')
-    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/loss_values.h5', key='loss')
+    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/model.pt')
+    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/loss_values.h5',
+                   key='loss')
 
 
 def train_mlp(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='MSE'):
@@ -199,8 +203,10 @@ def train_mlp(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='M
     num_epochs = args.model.num_epochs
     batch_size = args.model.batch_size
 
-    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name)):
-        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name))
+    sub_folder = args['date']
+
+    if not os.path.isdir(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder)):
+        os.makedirs(os.path.join(args.main_path, "models", args.model.model_type, args.file_name, sub_folder))
 
     MODEL_PARAMETERS['feature_scaler'] = args.model.feature_scaler
     MODEL_PARAMETERS['target_scaler'] = args.model.target_scaler
@@ -208,7 +214,7 @@ def train_mlp(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='M
     print("Selected hyperparameters: \n", MODEL_PARAMETERS)
 
     with open(os.path.join(args.main_path,"models", args.model.model_type,
-                           args.file_name, 'model_parameters.json'), 'w') as f:
+                           args.file_name, sub_folder, 'model_parameters.json'), 'w') as f:
         json.dump(MODEL_PARAMETERS, f)
 
     if metric == 'MSE':
@@ -219,5 +225,6 @@ def train_mlp(args, X_train, y_train, X_test, y_test, device, n_cpu=1, metric='M
     model, history = train_model(MODEL_PARAMETERS, num_epochs, batch_size, X_train, y_train,
                 X_test, y_test, criterion, device, n_cpu=n_cpu, verbose=True)
 
-    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/model.pt')
-    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/loss_values.h5', key='loss')
+    torch.save(model, f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/model.pt')
+    history.to_hdf(f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/loss_values.h5',
+                   key='loss')

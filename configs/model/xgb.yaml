@@ -1,7 +1,7 @@
 model_type: xgb
-hyperparameter_tuning: False
+hyperparameter_tuning: True
 feature_scaler: None
 target_scaler: None
 device: cuda
-opt_trials: 100
+opt_trials: 5
 metric: MAE

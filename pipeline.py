@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath("./src"))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 import hydra
+import datetime
 from omegaconf import OmegaConf
 from src.models import model_optimisation, model_train
 from src.evaluation import return_scores, save_pareto_front
@@ -19,6 +20,10 @@ from src.explainability import explain_model
 def main(args):
     print("--" * 40)
 
+    date = datetime.datetime.now()
+    args['date'] = f'{date:%Y_%m_%d_%H%M}'
+
+    print('Experiment Timestamp: ', f'{date:%Y_%m_%d_%H%M}')
     print(OmegaConf.to_yaml(args))
 
     print("--" * 40)

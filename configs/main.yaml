@@ -1,22 +1,22 @@
 defaults:
-  - model: ens
+  - model: kan
   - opt: ea_opt
   - eval: validation
   - xai: pdp
   - _self_
 
-main_path: /home/dbotache/datasets/kite/parameter_designs
+main_path: /mnt/work/dbotache/mt/scattered_field_prediction/data
 splitfolder: train_80perc_test_20perc
-file_name: Beispiel_Maschine_KI_Databasis
+file_name: lhs_2025_02_11
 
 random_seed: 42
 
-train_models: False
+train_models: True
 find_pareto: False
 regression_evaluation: False
 explain_regression: False
 optimisation_evaluation: False
-validation_results: True
+validation_results: False
 
 output_dir: ./output
 hydra:
@@ -24,3 +24,5 @@ hydra:
     chdir: True
   run:
     dir: ${output_dir}
+
+date: None
