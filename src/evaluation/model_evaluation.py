@@ -65,7 +65,7 @@ def evaluate_reg(y_true, y_pred):
     }
 
 
-def score_table(pred_list, y_true, model_types, rename_target_dict=None):
+def score_table(pred_list, y_true, model_types, rename_target_dict=None, sort_by='target'):
 
     if rename_target_dict is not None:
         y_true = y_true.rename(columns=rename_target_dict)
@@ -88,7 +88,83 @@ def score_table(pred_list, y_true, model_types, rename_target_dict=None):
 
     scores_df = pd.concat(df_list)
 
-    scores_table = scores_df.loc[:, scores_df.columns.values[::-1]].sort_values(by='target').reset_index().drop(
+    scores_table = scores_df.loc[:, scores_df.columns.values[::-1]].sort_values(by=sort_by).reset_index().drop(
         columns='index').set_index('target')
 
     return scores_table
+
+
+def compare_model_scores(y_true, predictions, labels=None):
+    """
+    Display regression metrics for one or multiple prediction sets.
+
+    Parameters:
+    ----------
+    y_true : array-like
+        True target values.
+    predictions : array-like, DataFrame, or list/tuple of them
+        Predictions to evaluate. Can be a single set or multiple sets.
+    labels : list/tuple of str, optional
+        Column labels for the prediction sets.
+    """
+    # Ensure predictions is a list
+    if not isinstance(predictions, (list, tuple)):
+        predictions = [predictions]
+
+    # Convert y_true to numpy array
+    y_true = np.asarray(y_true)
+
+    # Default labels if not provided
+    if labels is None:
+        labels = [f"Pred {i + 1}" for i in range(len(predictions))]
+
+    def bias_score(y_true, y_pred):
+        return np.mean(y_pred - y_true)
+
+    def nbias_score(y_true, y_pred):
+        denom = np.max(np.abs(y_true))
+        return np.mean(y_pred - y_true) / denom if denom != 0 else np.nan
+
+    def rmse_score(y_true, y_pred):
+        return np.sqrt(MSE(y_true, y_pred))
+
+    def nrmse_score(y_true, y_pred):
+        denom = np.max(np.abs(y_true))
+        return rmse_score(y_true, y_pred) / denom if denom != 0 else np.nan
+
+    def nmae_score(y_true, y_pred):
+        denom = np.max(np.abs(y_true))
+        return MAE(y_true, y_pred) / denom if denom != 0 else np.nan
+
+    def nmse_score(y_true, y_pred):
+        denom = np.var(y_true)
+        return MSE(y_true, y_pred) / denom if denom != 0 else np.nan
+
+    metrics = {
+        "MAE": MAE,
+        "MSE": MSE,
+        "RMSE": rmse_score,
+        "NMAE": nmae_score,
+        "NMSE": nmse_score,
+        "NRMSE": nrmse_score,
+        "Bias": bias_score,
+        "NBias": nbias_score,
+        "R2": r2_score,
+        "MAPE [%]": MAPE
+    }
+
+    results = []
+    for name, func in metrics.items():
+        row = [name]
+        for pred in predictions:
+            pred = np.asarray(pred)
+            val = func(y_true, pred)
+            if name == "MAPE":
+                row.append(f"{val * 100:.4f}")
+            else:
+                row.append(f"{val:.4f}")
+        results.append(row)
+
+    df = pd.DataFrame(results, columns=["Metric"] + labels)
+    scores_df = pd.DataFrame(df.T.values[1:], columns=df.T.iloc[[0]].values.flatten(), index=df.columns.values[1:]).astype(float)
+    return scores_df

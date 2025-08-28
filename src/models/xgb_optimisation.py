@@ -159,48 +159,55 @@ class XGBBayesOptimizer:
 
 def _optimize_and_train_single_target(i, X_train, y_train, args, sub_folder, n_cpu, trials,
                                       metric, tree_method, gpu_id, objective, eval_metric):
+
     target_name = y_train.columns.values[i]
+
     print(f'Target value {i + 1} from {y_train.shape[1]}: {target_name}')
 
-    optimizer = XGBBayesOptimizer(
-        X_train=X_train.values,
-        y_train=y_train.iloc[:, i].values,
-        model_parameters=xgb_parameters,
-        total_trials=trials,
-        minimize=True,
-        objective_name=metric
-    )
-
-    best_parameters, model = optimizer.run_bayes_search(
-        n_jobs=n_cpu,
-        gpu_id=gpu_id,
-        print_param_iter=False
-    )
-
-    best_parameters['feature_scaler'] = args.model.feature_scaler
-    best_parameters['target_scaler'] = args.model.target_scaler
-
-    # Save parameters
     param_path = f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}_parameters.json'
-    with open(param_path, "w") as f:
-        json.dump(best_parameters, f)
 
-    print(f'Training xgb for target {target_name}')
-    regressor = xgb.XGBRegressor(
-        **best_parameters,
-        n_jobs=n_cpu,
-        tree_method=tree_method,
-        gpu_id=gpu_id,
-        objective=objective,
-        eval_metric=eval_metric
-    )
-    regressor.fit(X_train.values, y_train.values[:, i])
+    if os.path.isfile(param_path):
+        return target_name
 
-    # Save model
-    model_path = f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}.pkl'
-    pickle.dump(regressor, open(model_path, "wb"))
+    else:
+        optimizer = XGBBayesOptimizer(
+            X_train=X_train.values,
+            y_train=y_train.iloc[:, i].values,
+            model_parameters=xgb_parameters,
+            total_trials=trials,
+            minimize=True,
+            objective_name=metric
+        )
 
-    return target_name
+        best_parameters, model = optimizer.run_bayes_search(
+            n_jobs=n_cpu,
+            gpu_id=gpu_id,
+            print_param_iter=False
+        )
+
+        best_parameters['feature_scaler'] = args.model.feature_scaler
+        best_parameters['target_scaler'] = args.model.target_scaler
+
+        # Save parameters
+        with open(param_path, "w") as f:
+            json.dump(best_parameters, f)
+
+        print(f'Training xgb for target {target_name}')
+        regressor = xgb.XGBRegressor(
+            **best_parameters,
+            n_jobs=n_cpu,
+            tree_method=tree_method,
+            gpu_id=gpu_id,
+            objective=objective,
+            eval_metric=eval_metric
+        )
+        regressor.fit(X_train.values, y_train.values[:, i])
+
+        # Save model
+        model_path = f'{args.main_path}/models/{args.model.model_type}/{args.file_name}/{sub_folder}/{target_name}.pkl'
+        pickle.dump(regressor, open(model_path, "wb"))
+
+        return target_name
 
 
 def optimize_xgb(args, device, X_train, y_train, n_cpu=1, trials=10, metric='MSE', n_jobs=-1):

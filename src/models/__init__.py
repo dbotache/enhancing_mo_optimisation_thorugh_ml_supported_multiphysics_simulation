@@ -1,3 +1,6 @@
+import os, sys
+sys.path.append(os.path.abspath('..'))
+
 import warnings
 import argparse
 
@@ -5,7 +8,7 @@ warnings.filterwarnings('ignore')
 
 from data_utils import load_df
 from data_utils.scaling import FeatureTargetScaling
-from models.xgb_optimisation import optimize_xgb, train_xgb, parallel_optimize_and_train
+from models.xgb_optimisation import optimize_xgb, train_xgb
 from models.mlp_optimisation import optimize_mlp, train_mlp
 from models.cnn_optimisation import optimize_cnn, train_cnn
 from models.kan_optimisation import optimize_kan, train_kan
@@ -25,9 +28,7 @@ def model_optimisation(args):
     X_test, y_test = x_y_scaling.scale_data(X_test, y_test)
 
     if args.model.model_type == 'xgb':
-        #optimize_xgb(args, device, X_train, y_train,
-        #             n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
-        parallel_optimize_and_train(args, X_train, y_train,
+        optimize_xgb(args, device, X_train, y_train,
                      n_cpu=n_cpu, trials=args.model.opt_trials, metric=args.model.metric)
     if args.model.model_type == 'ensemble': # Hyperparameter tuning is done automatically
         train_ensembles(args, X_train, y_train,
